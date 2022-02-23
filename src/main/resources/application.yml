@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ddrivedb
+    username: ddrive
+    password: ddrive
+  jpa:
+    hibernate:
+      ddl-auto: create
