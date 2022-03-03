@@ -13,6 +13,9 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import com.dswiss.api.ddrive.exception.CryptoException;
 
 public class Cryptography {
@@ -43,7 +46,7 @@ public class Cryptography {
 			byte[] salt = getRandomNonce(SALT_LENGTH_BYTE);
 			byte[] iv = getRandomNonce(IV_LENGTH_BYTE);
 	
-			SecretKey aesKeyFromPassword = getAESKeyFromPassword(secret.toCharArray(), salt);
+			SecretKey aesKeyFromPassword = getAESKeyFromPassword((secret + getPassPhrase()).toCharArray(), salt);
 	
 			Cipher cipher = Cipher.getInstance(ENCRYPT_ALGO);
 			cipher.init(Cipher.ENCRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(TAG_LENGTH_BIT, iv));
@@ -69,7 +72,7 @@ public class Cryptography {
 			byte[] cipherText = new byte[bb.remaining()];
 			bb.get(cipherText);
 	
-			SecretKey aesKeyFromPassword = getAESKeyFromPassword(secret.toCharArray(), salt);
+			SecretKey aesKeyFromPassword = getAESKeyFromPassword((secret + getPassPhrase()).toCharArray(), salt);
 	
 			Cipher cipher = Cipher.getInstance(ENCRYPT_ALGO);
 			cipher.init(Cipher.DECRYPT_MODE, aesKeyFromPassword, new GCMParameterSpec(TAG_LENGTH_BIT, iv));
@@ -80,5 +83,10 @@ public class Cryptography {
 		} catch (Exception ex) {
 			throw new CryptoException("Decrypt process error");
 		}
+	}
+	
+	private static String getPassPhrase() {
+		Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		return ((UserDetails) principal).getPassword();
 	}
 }
